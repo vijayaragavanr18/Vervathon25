@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TalkingHead Demo - Enhanced</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 20px;
+      color: white;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    #avatar {
+      width: 600px;
+      height: 600px;
+      margin: 20px auto;
+      border: 3px solid rgba(255,255,255,0.2);
+      border-radius: 15px;
+      background: rgba(0,0,0,0.1);
+    }
+    .controls {
+      margin: 20px 0;
+      padding: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+    #text {
+      width: 300px;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 25px;
+      margin-right: 10px;
+      outline: none;
+    }
+    #speak {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #speak:hover {
+      background: #45a049;
+    }
+    .feature-controls {
+      margin-top: 15px;
+    }
+    .feature-btn {
+      padding: 8px 15px;
+      font-size: 14px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      margin: 5px;
+      transition: background 0.3s;
+    }
+    .feature-btn:hover {
+      background: #0b7dda;
+    }
+    #status {
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      min-height: 50px;
+    }
+    .debug-info {
+      text-align: left;
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js/+esm",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+        "talkinghead": "./modules/talkinghead.mjs"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>🗣️ TalkingHead Avatar Demo</h1>
+    <div id="avatar"></div>
+    <div class="controls">
+      <input id="text" type="text" placeholder="Enter text to speak" value="Hello, how are you today?" />
+      <button id="speak">Speak</button>
+      <br><br>
+      <div class="feature-controls">
+        <button id="gesture-btn" class="feature-btn">👋 Wave</button>
+        <button id="pose-btn" class="feature-btn">🧍 Change Pose</button>
+        <button id="mood-btn" class="feature-btn">😊 Happy Mood</button>
+        <button id="emoji-btn" class="feature-btn">😂 Laugh</button>
+      </div>
+    </div>
+    <div id="status">Ready to load avatar...</div>
+    <div class="debug-info" id="debug">
+      <strong>Debug Info:</strong><br>
+      <span id="debug-content">Initializing...</span>
+    </div>
+  </div>
+  <script type="module">
+    import { TalkingHead } from "talkinghead";
+
+    // Debug logging function
+    function debugLog(message) {
+      console.log(message);
+      const debugContent = document.getElementById('debug-content');
+      if (debugContent) {
+        debugContent.innerHTML += '<br>' + new Date().toLocaleTimeString() + ': ' + message;
+      }
+    }
+
+    // Status update function
+    function updateStatus(message, isError = false) {
+      const status = document.getElementById('status');
+      if (status) {
+        status.innerHTML = message;
+        status.style.background = isError ? 'rgba(255,0,0,0.2)' : 'rgba(0,255,0,0.2)';
+      }
+      debugLog(message);
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        debugLog('TalkingHead module loaded successfully');
+        updateStatus('Initializing avatar...');
+        
+        const nodeAvatar = document.getElementById('avatar');
+        if (!nodeAvatar) {
+          throw new Error('Avatar container not found');
+        }
+
+        const head = new TalkingHead(nodeAvatar, {
+          // Remove TTS endpoint for now to avoid proxy errors
+          lipsyncModules: ["en"],
+          mixerGainSpeech: 3,
+          avatarMood: "neutral",
+          avatarSpeakingHeadMove: 0.7,
+          avatarSpeakingEyeContact: 0.8,
+          modelPixelRatio: window.devicePixelRatio || 1
+        });
+
+        debugLog('TalkingHead instance created');
+        updateStatus('Loading avatar model...');
+
+        head.showAvatar({
+          url: './avatars/ladyavatar.glb',
+          body: 'F',
+          avatarMood: 'neutral',
+          ttsLang: "en-GB",
+          ttsVoice: "en-GB-Standard-A",
+          lipsyncLang: 'en'
+        }).then(() => {
+          debugLog('Avatar loaded successfully');
+          updateStatus('✅ Avatar loaded successfully! Try the features below.');
+          
+          // Add custom gestures and poses
+          setupCustomFeatures(head);
+          
+        }).catch(error => {
+          debugLog('Avatar loading error: ' + error.message);
+          updateStatus('❌ Error loading avatar: ' + error.message, true);
+        });
+
+        const speakButton = document.getElementById('speak');
+        if (speakButton) {
+          speakButton.addEventListener('click', () => {
+            const textInput = document.getElementById('text');
+            const text = textInput ? textInput.value : '';
+            if (text) {
+              debugLog('Attempting to speak: "' + text + '"');
+              updateStatus('Processing speech...');
+              try {
+                // This will work for lip-sync even without TTS
+                head.speakText(text);
+                updateStatus('✅ Speech processing initiated (lip-sync without audio)');
+              } catch (error) {
+                debugLog('Speech error: ' + error.message);
+                updateStatus('❌ Speech error: ' + error.message, true);
+              }
+            } else {
+              updateStatus('Please enter some text first!', true);
+            }
+          });
+        }
+
+      } catch (error) {
+        debugLog('Critical error: ' + error.message);
+        updateStatus('❌ Critical error: ' + error.message, true);
+      }
+    });
+
+    // Setup custom features and event handlers
+    function setupCustomFeatures(head) {
+      // Add custom pose
+      head.poseTemplates["confident"] = {
+        standing: true,
+        props: {
+          'Hips.position': {x:0, y:0.989, z:0.001},
+          'Spine.rotation': {x:-0.05, y:0, z:0},
+          'Spine1.rotation': {x:0, y:0, z:0},
+          'Spine2.rotation': {x:0.08, y:0, z:0},
+          'LeftShoulder.rotation': {x:1.57, y:-0.1, z:-1.57},
+          'LeftArm.rotation': {x:1.2, y:0.3, z:0},
+          'RightShoulder.rotation': {x:1.57, y:0.1, z:1.57},
+          'RightArm.rotation': {x:1.2, y:-0.3, z:0}
+        }
+      };
+
+      // Add custom mood
+      head.animMoods["energetic"] = {
+        baseline: { eyesLookDown: 0.05 },
+        speech: { deltaRate: 0.1, deltaPitch: 0.05, deltaVolume: 0.1 },
+        anims: [
+          { name: 'breathing', delay: 1200, dt: [800,400,800], vs: { chestInhale: [0.7,0.7,0] } },
+          { name: 'pose', alt: [
+            { p: 0.3, delay: [3000,8000], vs: { pose: ['confident'] } },
+            { delay: [3000,8000], vs: { pose: ['side'] } }
+          ]},
+          { name: 'head',
+            idle: { delay: [0,500], dt: [[200,3000]], vs: { headRotateX: [[-0.02,0.12]], headRotateY: [[-0.2,0.2]], headRotateZ: [[-0.06,0.06]] } },
+            talking: { dt: [[0,800,0]], vs: { headRotateX: [[-0.03,0.18,1,2]], headRotateY: [[-0.08,0.08]], headRotateZ: [[-0.08,0.08]] } }
+          },
+          { name: 'eyes', delay: [100,3000], dt: [[100,400],[100,3000,2]], vs: { eyesRotateY: [[-0.5,0.5]], eyesRotateX: [[-0.1,0.5]] } },
+          { name: 'blink', delay: [800,6000,1,2], dt: [40,[80,250],80], vs: { eyeBlinkLeft: [1,1,0], eyeBlinkRight: [1,1,0] } }
+        ]
+      };
+
+      // Feature button handlers
+      document.getElementById('gesture-btn').addEventListener('click', () => {
+        debugLog('Playing wave gesture');
+        updateStatus('👋 Waving...');
+        head.playGesture('handup', 3);
+        setTimeout(() => updateStatus('✅ Gesture complete!'), 3000);
+      });
+
+      document.getElementById('pose-btn').addEventListener('click', () => {
+        debugLog('Changing to confident pose');
+        updateStatus('🧍 Changing pose...');
+        head.playPose('confident');
+        setTimeout(() => updateStatus('✅ New pose applied!'), 2000);
+      });
+
+      document.getElementById('mood-btn').addEventListener('click', () => {
+        debugLog('Setting energetic mood');
+        updateStatus('😊 Setting happy mood...');
+        head.setMood('energetic');
+        setTimeout(() => updateStatus('✅ Mood changed!'), 1000);
+      });
+
+      document.getElementById('emoji-btn').addEventListener('click', () => {
+        debugLog('Playing laugh emoji');
+        updateStatus('😂 Laughing...');
+        head.playGesture('😂', 2);
+        setTimeout(() => updateStatus('✅ That was funny!'), 2000);
+      });
+    }
+  </script>
+</body>
+</html>

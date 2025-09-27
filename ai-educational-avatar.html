@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI-Powered Interactive Avatar - Educational Assistant</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      margin: 0;
+      padding: 20px;
+      color: white;
+      min-height: 100vh;
+    }
+    .main-container {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 400px 1fr 350px;
+      gap: 20px;
+      height: calc(100vh - 40px);
+    }
+    .panel {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+    }
+    .left-panel {
+      overflow-y: auto;
+    }
+    .center-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    .right-panel {
+      overflow-y: auto;
+    }
+    
+    /* Avatar Section */
+    #avatar {
+      width: 100%;
+      height: 400px;
+      border-radius: 15px;
+      background: rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    /* Document Upload */
+    .upload-zone {
+      border: 2px dashed #fff;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .upload-zone:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: #4CAF50;
+    }
+    .upload-zone.dragover {
+      background: rgba(76, 175, 80, 0.2);
+      border-color: #4CAF50;
+    }
+    
+    /* Chat Interface */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: rgba(0,0,0,0.1);
+      border-radius: 15px;
+      overflow: hidden;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      max-height: 300px;
+    }
+    .message {
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 80%;
+    }
+    .message.user {
+      background: #4CAF50;
+      margin-left: auto;
+    }
+    .message.assistant {
+      background: rgba(255,255,255,0.2);
+      margin-right: auto;
+    }
+    .message.system {
+      background: rgba(52, 152, 219, 0.3);
+      border-left: 4px solid #3498db;
+      margin: 10px auto;
+      max-width: 90%;
+      font-size: 13px;
+    }
+    .system-message {
+      color: #ecf0f1;
+      line-height: 1.4;
+    }
+    .system-message strong {
+      color: #3498db;
+    }
+    .chat-input-container {
+      padding: 15px;
+      background: rgba(0,0,0,0.1);
+      display: flex;
+      gap: 10px;
+    }
+    .chat-input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.9);
+      color: #333;
+    }
+    
+    /* Controls */
+    .control-group {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      font-size: 16px;
+      color: #fff;
+    }
+    .btn {
+      padding: 8px 15px;
+      margin: 3px;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s;
+      color: white;
+    }
+    .btn-primary { background: #2196F3; }
+    .btn-success { background: #4CAF50; }
+    .btn-warning { background: #FF9800; }
+    .btn-danger { background: #f44336; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+    
+    /* Language Selector */
+    .language-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .lang-btn {
+      padding: 5px 10px;
+      font-size: 11px;
+      border-radius: 12px;
+    }
+    .lang-btn.active {
+      background: #4CAF50 !important;
+    }
+    
+    /* Status */
+    .status {
+      padding: 10px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      font-size: 12px;
+      margin-bottom: 15px;
+      min-height: 20px;
+    }
+    
+    /* Document List */
+    .document-item {
+      background: rgba(255,255,255,0.1);
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 8px;
+      display: flex;
+      justify-content: between;
+      align-items: center;
+    }
+    .document-item .actions {
+      margin-left: auto;
+    }
+    .document-item .actions button {
+      padding: 4px 8px;
+      font-size: 10px;
+      margin-left: 5px;
+    }
+    
+    /* Voice Controls */
+    .voice-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .voice-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .voice-btn.recording {
+      background: #f44336;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+    
+    /* Gamification */
+    .gamification {
+      background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    .progress-bar {
+      background: rgba(255,255,255,0.3);
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    .progress-fill {
+      background: #4CAF50;
+      height: 100%;
+      transition: width 0.3s;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js/+esm",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+        "talkinghead": "./modules/talkinghead.mjs"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Left Panel: Document Management -->
+    <div class="panel left-panel">
+      <h2>📚 Document Manager</h2>
+      
+      <div class="upload-zone" id="uploadZone">
+        <div>📁 Drop files here or click to upload</div>
+        <small>Supports: PDF, DOCX, TXT, PPTX, XLSX</small>
+        <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.pptx,.xlsx" style="display: none;">
+      </div>
+      
+      <div class="control-group">
+        <h3>📖 Uploaded Documents</h3>
+        <div id="documentList">
+          <div class="document-item">
+            <span>📄 No documents uploaded</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <h3>🎯 Study Mode</h3>
+        <button class="btn btn-primary" onclick="setStudyMode('summarize')">📝 Summarize</button>
+        <button class="btn btn-primary" onclick="setStudyMode('quiz')">❓ Quiz Me</button>
+        <button class="btn btn-primary" onclick="setStudyMode('explain')">💡 Explain</button>
+        <button class="btn btn-primary" onclick="setStudyMode('flashcards')">🗂️ Flashcards</button>
+      </div>
+      
+      <div class="control-group">
+        <h3>🌍 Languages</h3>
+        <div class="language-selector">
+          <button class="btn lang-btn btn-primary active" onclick="setLanguage('en')">🇺🇸 EN</button>
+          <button class="btn lang-btn btn-primary" onclick="setLanguage('es')">🇪🇸 ES</button>
+          <button class="btn lang-btn btn-primary" onclick="setLanguage('fr')">🇫🇷 FR</button>
+          <button class="btn lang-btn btn-primary" onclick="setLanguage('de')">🇩🇪 DE</button>
+          <button class="btn lang-btn btn-primary" onclick="setLanguage('zh')">🇨🇳 ZH</button>
+          <button class="btn lang-btn btn-primary" onclick="setLanguage('ja')">🇯🇵 JA</button>
+          <button class="btn lang-btn btn-primary" onclick="setLanguage('ko')">🇰🇷 KO</button>
+          <button class="btn lang-btn btn-primary" onclick="setLanguage('ar')">🇸🇦 AR</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Center Panel: Avatar & Chat -->
+    <div class="panel center-panel">
+      <h1>🤖 AI Educational Avatar</h1>
+      <div id="avatar"></div>
+      
+      <div class="voice-controls">
+        <button class="voice-btn btn-success" id="voiceBtn" onclick="toggleVoiceInput()">
+          🎤 Start Voice Input
+        </button>
+        <button class="voice-btn btn-warning" onclick="toggleTTS()">
+          🔊 Toggle Speech
+        </button>
+      </div>
+      
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+          <div class="message assistant">
+            <strong>AI Avatar:</strong> Hello! I'm your AI educational assistant. Upload documents and I'll help you learn! 📚
+          </div>
+        </div>
+        <div class="chat-input-container">
+          <input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything about your documents..." />
+          <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+        </div>
+      </div>
+      
+      <div class="status" id="status">Ready to help you learn! Upload a document to get started.</div>
+    </div>
+    
+    <!-- Right Panel: Gamification & Controls -->
+    <div class="panel right-panel">
+      <div class="gamification">
+        <h3>🏆 Learning Progress</h3>
+        <div>Level: <span id="userLevel">1</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 25%"></div>
+        </div>
+        <div>XP: <span id="userXP">250</span>/1000</div>
+        <div>🏅 Achievements: <span id="achievements">3</span></div>
+      </div>
+      
+      <div class="control-group">
+        <h3>🎭 Avatar Mood</h3>
+        <button class="btn btn-primary" onclick="changeMood('teacher')">👩‍🏫 Teacher</button>
+        <button class="btn btn-primary" onclick="changeMood('friendly')">😊 Friendly</button>
+        <button class="btn btn-primary" onclick="changeMood('energetic')">⚡ Energetic</button>
+        <button class="btn btn-primary" onclick="changeMood('calm')">😌 Calm</button>
+      </div>
+      
+      <div class="control-group">
+        <h3>🎪 Quick Actions</h3>
+        <button class="btn btn-success" onclick="startQuickSummary()">⚡ Quick Summary</button>
+        <button class="btn btn-warning" onclick="generateQuiz()">❓ Generate Quiz</button>
+        <button class="btn btn-danger" onclick="explainConcept()">💡 Explain Key Points</button>
+        <button class="btn btn-primary" onclick="createFlashcards()">🗂️ Make Flashcards</button>
+      </div>
+      
+      <div class="control-group">
+        <h3>📊 Document Insights</h3>
+        <div id="documentStats">
+          <p>📄 Documents: 0</p>
+          <p>📝 Pages: 0</p>
+          <p>📚 Topics: 0</p>
+          <p>⏱️ Est. Reading: 0 min</p>
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <h3>🎮 Study Games</h3>
+        <button class="btn btn-success" onclick="startMatchingGame()">🎯 Concept Matching</button>
+        <button class="btn btn-warning" onclick="startWordAssociation()">🔗 Word Association</button>
+        <button class="btn btn-danger" onclick="startTimeChallenge()">⏰ Speed Quiz</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { TalkingHead } from "talkinghead";
+    
+    // Global state
+    let head;
+    let isInitialized = false;
+    let currentLanguage = 'en';
+    let studyMode = 'explain';
+    let uploadedDocuments = [];
+    let isRecording = false;
+    let recognition;
+    let speechSynthesis = window.speechSynthesis;
+    let isTTSEnabled = true;
+    
+    // Initialize voices when available
+    function initVoices() {
+      if (speechSynthesis.getVoices().length === 0) {
+        speechSynthesis.addEventListener('voiceschanged', initVoices);
+      } else {
+        console.log('Available voices:', speechSynthesis.getVoices().map(v => v.name));
+      }
+    }
+    initVoices();
+    
+    // User progress
+    let userProgress = {
+      level: 1,
+      xp: 250,
+      achievements: 3,
+      documentsProcessed: 0,
+      questionsAnswered: 0
+    };
+
+    function updateStatus(message, isError = false) {
+      const status = document.getElementById('status');
+      status.innerHTML = message;
+      status.style.background = isError ? 'rgba(255,0,0,0.2)' : 'rgba(0,255,0,0.2)';
+      console.log(message);
+    }
+
+    // Initialize TalkingHead Avatar
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        updateStatus('🚀 Loading AI Avatar...');
+        
+        const nodeAvatar = document.getElementById('avatar');
+        head = new TalkingHead(nodeAvatar, {
+          lipsyncModules: ["en"],
+          mixerGainSpeech: 3,
+          avatarMood: "teacher",
+          avatarSpeakingHeadMove: 0.8,
+          avatarSpeakingEyeContact: 0.9,
+          modelPixelRatio: window.devicePixelRatio || 1
+        });
+
+        await head.showAvatar({
+          url: './avatars/ladyavatar.glb',
+          body: 'F',
+          avatarMood: 'neutral',
+          ttsLang: "en-US",
+          ttsVoice: "en-US-Standard-C",
+          lipsyncLang: 'en'
+        });
+
+        setupCustomMoods();
+        setupEventListeners();
+        setupVoiceRecognition();
+        
+        isInitialized = true;
+        updateStatus('✅ AI Avatar ready! Upload documents to start learning.');
+        
+        // Welcome message
+        speakAndShow("Hello! I'm your AI educational assistant. Upload some documents and I'll help you learn in a fun and interactive way!");
+
+      } catch (error) {
+        updateStatus('❌ Error initializing avatar: ' + error.message, true);
+      }
+    });
+
+    function setupCustomMoods() {
+      // Teacher mood - professional and instructive
+      head.animMoods["teacher"] = {
+        baseline: { eyesLookDown: 0.1, mouthSmile: 0.05 },
+        speech: { deltaRate: 0, deltaPitch: 0, deltaVolume: 0 },
+        anims: [
+          { name: 'breathing', delay: 1800, dt: [1200,600,1200], vs: { chestInhale: [0.5,0.5,0] } },
+          { name: 'pose', alt: [{ delay: [8000,15000], vs: { pose: ['straight'] } }]},
+          { name: 'head',
+            idle: { delay: [0,1000], dt: [[300,4000]], vs: { headRotateX: [[-0.02,0.08]], headRotateY: [[-0.2,0.2]], headRotateZ: [[-0.05,0.05]] } },
+            talking: { dt: [[0,1000,0]], vs: { headRotateX: [[-0.03,0.12,1,2]], headRotateY: [[-0.1,0.1]], headRotateZ: [[-0.08,0.08]] } }
+          },
+          { name: 'eyes', delay: [200,4000], dt: [[100,400],[100,4000,2]], vs: { eyesRotateY: [[-0.4,0.4]], eyesRotateX: [[-0.1,0.4]] } },
+          { name: 'blink', delay: [1500,8000,1,2], dt: [60,[120,300],100], vs: { eyeBlinkLeft: [1,1,0], eyeBlinkRight: [1,1,0] } }
+        ]
+      };
+
+      // Friendly mood - warm and approachable
+      head.animMoods["friendly"] = {
+        baseline: { mouthSmile: 0.15, eyeSquintLeft: 0.05, eyeSquintRight: 0.05 },
+        speech: { deltaRate: 0.05, deltaPitch: 0.1, deltaVolume: 0.05 },
+        anims: [
+          { name: 'breathing', delay: 1500, dt: [1000,500,1000], vs: { chestInhale: [0.6,0.6,0] } },
+          { name: 'pose', alt: [{ delay: [4000,10000], vs: { pose: ['side'] } }]},
+          { name: 'head',
+            idle: { delay: [0,800], dt: [[200,3500]], vs: { headRotateX: [[-0.03,0.12]], headRotateY: [[-0.25,0.25]], headRotateZ: [[-0.07,0.07]] } },
+            talking: { dt: [[0,900,0]], vs: { headRotateX: [[-0.04,0.16,1,2]], headRotateY: [[-0.12,0.12]], headRotateZ: [[-0.1,0.1]] } }
+          },
+          { name: 'eyes', delay: [150,3500], dt: [[100,450],[100,3500,2]], vs: { eyesRotateY: [[-0.5,0.5]], eyesRotateX: [[-0.15,0.5]] } },
+          { name: 'blink', delay: [1000,6000,1,2], dt: [50,[100,280],100], vs: { eyeBlinkLeft: [1,1,0], eyeBlinkRight: [1,1,0] } }
+        ]
+      };
+
+      // Calm mood - peaceful and reassuring
+      head.animMoods["calm"] = {
+        baseline: { eyesLookDown: 0.2 },
+        speech: { deltaRate: -0.1, deltaPitch: -0.05, deltaVolume: -0.05 },
+        anims: [
+          { name: 'breathing', delay: 2500, dt: [1800,800,1500], vs: { chestInhale: [0.4,0.4,0] } },
+          { name: 'pose', alt: [{ delay: [10000,20000], vs: { pose: ['straight'] } }]},
+          { name: 'head',
+            idle: { delay: [0,2000], dt: [[400,6000]], vs: { headRotateX: [[-0.01,0.04]], headRotateY: [[-0.1,0.1]], headRotateZ: [[-0.03,0.03]] } },
+            talking: { dt: [[0,1200,0]], vs: { headRotateX: [[-0.02,0.06,1,2]], headRotateY: [[-0.06,0.06]], headRotateZ: [[-0.05,0.05]] } }
+          },
+          { name: 'eyes', delay: [400,6000], dt: [[200,600],[200,6000,2]], vs: { eyesRotateY: [[-0.2,0.2]], eyesRotateX: [[-0.05,0.2]] } },
+          { name: 'blink', delay: [2000,12000,1,2], dt: [80,[200,500],200], vs: { eyeBlinkLeft: [1,1,0], eyeBlinkRight: [1,1,0] } }
+        ]
+      };
+    }
+
+    function setupEventListeners() {
+      // File upload
+      const uploadZone = document.getElementById('uploadZone');
+      const fileInput = document.getElementById('fileInput');
+      
+      uploadZone.addEventListener('click', () => fileInput.click());
+      uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+      });
+      uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+      });
+      uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+      });
+      
+      fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+      });
+      
+      // Chat input
+      document.getElementById('chatInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          sendMessage();
+        }
+      });
+    }
+
+    function setupVoiceRecognition() {
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        
+        recognition.onresult = function(event) {
+          const transcript = event.results[0][0].transcript;
+          document.getElementById('chatInput').value = transcript;
+          updateStatus('🎤 Voice input: "' + transcript + '"');
+          setTimeout(() => sendMessage(), 500);
+        };
+        
+        recognition.onerror = function(event) {
+          updateStatus('❌ Voice recognition error: ' + event.error, true);
+          isRecording = false;
+          document.getElementById('voiceBtn').classList.remove('recording');
+          document.getElementById('voiceBtn').textContent = '🎤 Start Voice Input';
+        };
+        
+        recognition.onend = function() {
+          isRecording = false;
+          document.getElementById('voiceBtn').classList.remove('recording');
+          document.getElementById('voiceBtn').textContent = '🎤 Start Voice Input';
+        };
+      } else {
+        updateStatus('⚠️ Voice recognition not supported in this browser', true);
+      }
+    }
+
+    // File handling functions
+    function handleFiles(files) {
+      Array.from(files).forEach(file => {
+        if (isValidFileType(file)) {
+          uploadDocument(file);
+        } else {
+          updateStatus('❌ Unsupported file type: ' + file.name, true);
+        }
+      });
+    }
+
+    function isValidFileType(file) {
+      const supportedTypes = [
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ];
+      return supportedTypes.includes(file.type);
+    }
+
+    async function uploadDocument(file) {
+      updateStatus('📤 Uploading ' + file.name + '...');
+      
+      try {
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // Upload to FastAPI backend with PyMuPDF processing
+        const response = await fetch('http://localhost:8000/api/v1/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Upload failed: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Store processed document data
+          const documentData = {
+            id: Date.now(),
+            name: result.filename,
+            type: result.file_type,
+            size: result.file_size,
+            uploadedAt: new Date(),
+            processed: true,
+            content: result.content_preview,
+            summary: result.quick_summary,
+            keyPoints: result.analysis.keywords.slice(0, 5),
+            topics: result.analysis.topics || ['General Content'],
+            analysis: result.analysis,
+            chunks_created: result.chunks_created,
+            extraction_method: result.extraction_method,
+            semantic_search_enabled: result.semantic_search_enabled
+          };
+          
+          uploadedDocuments.push(documentData);
+          updateDocumentList();
+          updateDocumentStats();
+          addExperience(50);
+          
+          // Display processed content in chat
+          displayDocumentInChat(documentData);
+          
+          updateStatus('✅ Document processed with PyMuPDF!');
+          speakAndShow(`Perfect! I've processed ${file.name} using advanced PyMuPDF extraction. I found ${result.analysis.word_count} words across ${result.chunks_created} semantic chunks. The document appears to be about ${result.analysis.content_type}. Ask me anything about it!`);
+          
+        } else {
+          throw new Error(result.error || 'Processing failed');
+        }
+        
+      } catch (error) {
+        console.error('Upload error:', error);
+        updateStatus('❌ Error uploading document: ' + error.message, true);
+        speakAndShow('Sorry, I encountered an error processing your document. Please try again.');
+      }
+    }
+
+    // Display processed document content in chatbox
+    function displayDocumentInChat(doc) {
+      const chatHistory = document.getElementById('chatHistory');
+      
+      // Create detailed document info message
+      const documentInfo = `
+        📄 **Document Processed: ${doc.name}**
+        
+        🔍 **Analysis Results:**
+        • File Type: ${doc.analysis.content_type}
+        • Word Count: ${doc.analysis.word_count.toLocaleString()}
+        • Reading Time: ~${doc.analysis.estimated_reading_time} minutes
+        • Language: ${doc.analysis.language}
+        • Complexity Score: ${doc.analysis.complexity_score}/10
+        • Extraction Method: ${doc.extraction_method}
+        • Semantic Chunks: ${doc.chunks_created}
+        
+        📝 **Quick Summary:**
+        ${doc.summary}
+        
+        🔑 **Key Topics Found:**
+        ${doc.topics.map(topic => `• ${topic}`).join('\n')}
+        
+        📋 **Important Keywords:**
+        ${doc.keyPoints.map(point => `• ${point}`).join('\n')}
+        
+        💬 **Ready for Questions!**
+        I now have full context about this document and can answer specific questions about its content. Try asking me about any topic mentioned above!
+      `;
+      
+      // Add system message to chat
+      addMessage('system', documentInfo.trim());
+      
+      // Store current document context globally for chat
+      window.currentDocumentContext = {
+        content: doc.content,
+        summary: doc.summary,
+        analysis: doc.analysis,
+        filename: doc.name,
+        ready_for_chat: true
+      };
+      
+      console.log('Document context loaded for chat:', window.currentDocumentContext);
+    }
+
+    function updateDocumentList() {
+      const listContainer = document.getElementById('documentList');
+      
+      if (uploadedDocuments.length === 0) {
+        listContainer.innerHTML = '<div class="document-item"><span>📄 No documents uploaded</span></div>';
+        return;
+      }
+      
+      listContainer.innerHTML = uploadedDocuments.map(doc => `
+        <div class="document-item">
+          <div>
+            <div>${getFileIcon(doc.type)} ${doc.name}</div>
+            <small>${doc.processed ? '✅ Processed' : '⏳ Processing...'}</small>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="summarizeDocument('${doc.id}')">📝</button>
+            <button class="btn btn-warning" onclick="quizDocument('${doc.id}')">❓</button>
+            <button class="btn btn-danger" onclick="removeDocument('${doc.id}')">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getFileIcon(fileType) {
+      switch (fileType) {
+        case 'application/pdf': return '📕';
+        case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': return '📘';
+        case 'text/plain': return '📄';
+        case 'application/vnd.openxmlformats-officedocument.presentationml.presentation': return '📊';
+        case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': return '📈';
+        default: return '📄';
+      }
+    }
+
+    function updateDocumentStats() {
+      const stats = document.getElementById('documentStats');
+      const totalPages = uploadedDocuments.reduce((sum, doc) => sum + Math.ceil(doc.size / 2000), 0);
+      const totalTopics = uploadedDocuments.reduce((sum, doc) => sum + (doc.topics?.length || 0), 0);
+      const estimatedReading = Math.ceil(totalPages * 2);
+      
+      stats.innerHTML = `
+        <p>📄 Documents: ${uploadedDocuments.length}</p>
+        <p>📝 Pages: ${totalPages}</p>
+        <p>📚 Topics: ${totalTopics}</p>
+        <p>⏱️ Est. Reading: ${estimatedReading} min</p>
+      `;
+    }
+
+    // Enhanced chat function with document-aware AI
+    async function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      if (!message) return;
+      
+      addMessageToChat('user', message);
+      input.value = '';
+      
+      // Show AI thinking status
+      updateStatus('🧠 AI is analyzing your question with document context...');
+      
+      try {
+        // Use FastAPI backend for document-aware chat
+        const response = await fetch('http://localhost:8000/api/v1/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: message,
+            context: window.currentDocumentContext?.summary || '',
+            language: currentLanguage,
+            conversation_history: getRecentChatHistory()
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Chat request failed: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        // Enhanced response with document context info
+        let aiResponse = result.response;
+        
+        // Add document context indicator if used
+        if (result.document_context_used && result.relevant_chunks > 0) {
+          aiResponse += `\n\n💡 *I found ${result.relevant_chunks} relevant sections from your uploaded document to answer this question.*`;
+        }
+        
+        // Add confidence and model info for transparency
+        if (result.confidence < 0.7) {
+          aiResponse += `\n\n🤔 *I'm not entirely certain about this answer. Could you provide more specific details or rephrase your question?*`;
+        }
+        
+        addMessageToChat('assistant', aiResponse);
+        speakAndShow(result.response); // Speak the main response without metadata
+        addExperience(15);
+        
+        updateStatus(`✅ Response generated using ${result.model_used} (Confidence: ${Math.round(result.confidence * 100)}%)`);
+        
+      } catch (error) {
+        console.error('Chat error:', error);
+        
+        // Fallback to basic response if API fails
+        const fallbackResponse = generateDocumentAwareFallback(message);
+        addMessageToChat('assistant', fallbackResponse);
+        speakAndShow(fallbackResponse);
+        
+        updateStatus('⚠️ Using fallback response - API temporarily unavailable');
+      }
+    }
+    
+    // Get recent chat history for context
+    function getRecentChatHistory() {
+      const messages = document.querySelectorAll('#chatMessages .message');
+      const history = [];
+      
+      // Get last 6 messages (3 exchanges) for context
+      const recentMessages = Array.from(messages).slice(-6);
+      
+      for (let i = 0; i < recentMessages.length; i += 2) {
+        const userMsg = recentMessages[i];
+        const aiMsg = recentMessages[i + 1];
+        
+        if (userMsg && aiMsg) {
+          history.push({
+            user: userMsg.textContent.replace('You: ', ''),
+            assistant: aiMsg.textContent.replace('AI Avatar: ', '')
+          });
+        }
+      }
+      
+      return history;
+    }
+    
+    // Enhanced fallback with document awareness
+    function generateDocumentAwareFallback(userMessage) {
+      const message = userMessage.toLowerCase();
+      
+      // Check if we have document context
+      if (window.currentDocumentContext) {
+        const doc = window.currentDocumentContext;
+        
+        if (message.includes('summary') || message.includes('summarize')) {
+          return `Based on your uploaded document "${doc.filename}", here's the summary I generated: ${doc.summary}. Would you like me to elaborate on any specific part?`;
+        }
+        
+        if (message.includes('what') && (message.includes('document') || message.includes('about'))) {
+          return `Your document "${doc.filename}" appears to be ${doc.analysis.content_type.toLowerCase()} with ${doc.analysis.word_count} words. It covers topics like: ${doc.analysis.keywords?.slice(0, 3).join(', ')}. The main summary is: ${doc.summary}`;
+        }
+        
+        if (message.includes('key') && (message.includes('point') || message.includes('topic'))) {
+          return `From your document, I identified these key topics: ${doc.analysis.keywords?.slice(0, 5).join(', ')}. The document type is ${doc.analysis.content_type} with a complexity score of ${doc.analysis.complexity_score}/10.`;
+        }
+        
+        // General document-aware response
+        return `Based on your uploaded document "${doc.filename}", I can help you understand the content better. The document covers ${doc.analysis.content_type.toLowerCase()} topics. Here's a quick summary: ${doc.summary.substring(0, 200)}... What specific aspect would you like me to explain?`;
+      }
+      
+      // No document context
+      const responses = [
+        "I'd be happy to help! Please upload a document so I can provide specific information based on your materials.",
+        "That's an interesting question! Once you upload a document, I'll be able to give you detailed answers based on its content.",
+        "I'm ready to help with your studies! Upload a PDF, Word document, or text file and I'll analyze it to answer your questions.",
+        "Great question! I can provide much more detailed and specific answers once you upload a document for me to analyze."
+      ];
+      
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
+
+    // Enhanced message handling with system messages
+    function addMessageToChat(sender, message) {
+      const chatMessages = document.getElementById('chatMessages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}`;
+      
+      let senderName = sender === 'user' ? 'You' : sender === 'system' ? '📄 Document Analysis' : 'AI Avatar';
+      let messageClass = sender === 'system' ? 'system-message' : '';
+      
+      messageDiv.innerHTML = `<strong>${senderName}:</strong> <span class="${messageClass}">${formatMessage(message)}</span>`;
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Add system message (alias for document processing results)
+    function addMessage(type, content) {
+      addMessageToChat(type, content);
+    }
+    
+    // Format messages with markdown-like formatting
+    function formatMessage(message) {
+      return message
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+        .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+        .replace(/•/g, '&bull;') // Bullet points
+        .replace(/\n/g, '<br>'); // Line breaks
+    }
+
+    function generateAIResponse(userMessage) {
+      const responses = [
+        "That's a great question! Based on the documents you've uploaded, I can help explain that concept in detail.",
+        "I understand what you're asking. Let me break this down into simpler terms based on your study materials.",
+        "Excellent point! This relates directly to the key concepts we've been studying. Here's how they connect:",
+        "I can see you're really thinking about this topic! That shows great engagement with the material.",
+        "This is an important concept that appears frequently in your documents. Let me explain it step by step."
+      ];
+      
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
+
+    function speakAndShow(text) {
+      if (!isInitialized) return;
+      
+      // Make avatar speak and show lip-sync
+      head.speakText(text);
+      
+      // Also use browser TTS if enabled
+      if (isTTSEnabled && speechSynthesis) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = getLanguageCode(currentLanguage);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.2;
+        
+        // Select a female voice if available
+        const voices = speechSynthesis.getVoices();
+        const femaleVoice = voices.find(voice => 
+          voice.lang.startsWith(getLanguageCode(currentLanguage).substring(0, 2)) && 
+          (voice.name.includes('Female') || voice.name.includes('Zira') || voice.name.includes('Hazel') || 
+           voice.name.includes('Susan') || voice.name.includes('Samantha') || voice.gender === 'female')
+        );
+        
+        if (femaleVoice) {
+          utterance.voice = femaleVoice;
+        }
+        
+        speechSynthesis.speak(utterance);
+      }
+    }
+
+    function getLanguageCode(lang) {
+      const langCodes = {
+        'en': 'en-US',
+        'es': 'es-ES',
+        'fr': 'fr-FR',
+        'de': 'de-DE',
+        'zh': 'zh-CN',
+        'ja': 'ja-JP',
+        'ko': 'ko-KR',
+        'ar': 'ar-SA'
+      };
+      return langCodes[lang] || 'en-US';
+    }
+
+    // Gamification functions
+    function addExperience(xp) {
+      userProgress.xp += xp;
+      
+      // Check for level up
+      const xpForNextLevel = userProgress.level * 1000;
+      if (userProgress.xp >= xpForNextLevel) {
+        userProgress.level++;
+        userProgress.xp = userProgress.xp - xpForNextLevel;
+        showLevelUp();
+      }
+      
+      updateProgressDisplay();
+    }
+
+    function showLevelUp() {
+      updateStatus('🎉 Level Up! You reached level ' + userProgress.level + '!');
+      speakAndShow(`Congratulations! You've reached level ${userProgress.level}! Keep up the great learning!`);
+      if (isInitialized) {
+        head.playGesture('thumbup', 3);
+        setTimeout(() => head.playGesture('😊', 2), 2000);
+      }
+    }
+
+    function updateProgressDisplay() {
+      document.getElementById('userLevel').textContent = userProgress.level;
+      document.getElementById('userXP').textContent = userProgress.xp;
+      document.getElementById('achievements').textContent = userProgress.achievements;
+      
+      const progressPercentage = (userProgress.xp / (userProgress.level * 1000)) * 100;
+      document.getElementById('progressFill').style.width = progressPercentage + '%';
+    }
+
+    // Global functions for buttons
+    window.setStudyMode = function(mode) {
+      studyMode = mode;
+      updateStatus('📚 Study mode set to: ' + mode);
+      speakAndShow(`Great! I've set the study mode to ${mode}. How can I help you learn?`);
+    };
+
+    window.setLanguage = function(lang) {
+      // Remove active class from all language buttons
+      document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+      // Add active class to selected button
+      event.target.classList.add('active');
+      
+      currentLanguage = lang;
+      updateStatus('🌍 Language set to: ' + lang.toUpperCase());
+      
+      if (recognition) {
+        recognition.lang = getLanguageCode(lang);
+      }
+    };
+
+    window.changeMood = function(mood) {
+      if (!isInitialized) return;
+      head.setMood(mood);
+      updateStatus('🎭 Avatar mood changed to: ' + mood);
+      
+      const moodMessages = {
+        'teacher': "I'm now in teacher mode. Ready to help you learn!",
+        'friendly': "Hello there! I'm feeling friendly and ready to chat!",
+        'energetic': "I'm feeling energetic! Let's make learning fun!",
+        'calm': "I'm in a calm mood. Let's take our time to understand everything."
+      };
+      
+      speakAndShow(moodMessages[mood] || "I've changed my mood!");
+    };
+
+    window.toggleVoiceInput = function() {
+      if (!recognition) {
+        updateStatus('❌ Voice recognition not available', true);
+        return;
+      }
+      
+      if (isRecording) {
+        recognition.stop();
+        isRecording = false;
+        document.getElementById('voiceBtn').classList.remove('recording');
+        document.getElementById('voiceBtn').textContent = '🎤 Start Voice Input';
+        updateStatus('🎤 Voice input stopped');
+      } else {
+        recognition.start();
+        isRecording = true;
+        document.getElementById('voiceBtn').classList.add('recording');
+        document.getElementById('voiceBtn').textContent = '🛑 Stop Recording';
+        updateStatus('🎤 Listening... Speak now!');
+      }
+    };
+
+    window.toggleTTS = function() {
+      isTTSEnabled = !isTTSEnabled;
+      updateStatus(isTTSEnabled ? '🔊 Text-to-Speech enabled' : '🔇 Text-to-Speech disabled');
+      speakAndShow(isTTSEnabled ? "Text to speech is now enabled!" : "Text to speech disabled.");
+    };
+
+    // Study functions
+    window.startQuickSummary = function() {
+      if (uploadedDocuments.length === 0) {
+        updateStatus('❌ Please upload documents first', true);
+        speakAndShow("Please upload some documents first so I can create a summary for you.");
+        return;
+      }
+      
+      const summaryText = "Here's a quick summary of your documents: The materials cover fundamental concepts with practical applications. Key areas include theoretical frameworks, methodologies, and real-world examples that demonstrate the principles in action.";
+      
+      addMessageToChat('assistant', summaryText);
+      speakAndShow(summaryText);
+      addExperience(25);
+    };
+
+    window.generateQuiz = function() {
+      if (uploadedDocuments.length === 0) {
+        updateStatus('❌ Please upload documents first', true);
+        speakAndShow("I need some documents to create a quiz. Please upload your study materials first!");
+        return;
+      }
+      
+      const quizText = "Let's start a quiz! Question 1: Based on your documents, what are the main concepts we should focus on? Think about the key themes that appear most frequently.";
+      
+      addMessageToChat('assistant', quizText);
+      speakAndShow(quizText);
+      if (isInitialized) {
+        head.playGesture('index', 2);
+      }
+      addExperience(20);
+    };
+
+    window.explainConcept = function() {
+      if (uploadedDocuments.length === 0) {
+        updateStatus('❌ Please upload documents first', true);
+        speakAndShow("I'd love to explain concepts from your documents, but I need you to upload them first!");
+        return;
+      }
+      
+      const explanationText = "Let me explain the key concepts: The documents present a structured approach to understanding complex topics through step-by-step analysis. Each concept builds upon previous knowledge to create a comprehensive learning framework.";
+      
+      addMessageToChat('assistant', explanationText);
+      speakAndShow(explanationText);
+      addExperience(30);
+    };
+
+    window.createFlashcards = function() {
+      if (uploadedDocuments.length === 0) {
+        updateStatus('❌ Please upload documents first', true);
+        speakAndShow("I need some documents to create flashcards from. Upload your study materials and I'll help you make flashcards!");
+        return;
+      }
+      
+      const flashcardText = "I'm creating flashcards from your documents! Here's the first one: What is the main purpose of the methodologies discussed in your materials? Think about it, and I'll give you the answer when you're ready!";
+      
+      addMessageToChat('assistant', flashcardText);
+      speakAndShow(flashcardText);
+      if (isInitialized) {
+        head.playGesture('ok', 2);
+      }
+      addExperience(35);
+    };
+
+    // Document-specific functions
+    window.summarizeDocument = function(docId) {
+      const doc = uploadedDocuments.find(d => d.id == docId);
+      if (doc && doc.processed) {
+        const summaryText = `Here's a summary of ${doc.name}: ${doc.summary} The key points include: ${doc.keyPoints.join(', ')}.`;
+        addMessageToChat('assistant', summaryText);
+        speakAndShow(summaryText);
+        addExperience(15);
+      }
+    };
+
+    window.quizDocument = function(docId) {
+      const doc = uploadedDocuments.find(d => d.id == docId);
+      if (doc && doc.processed) {
+        const quizText = `Let's quiz on ${doc.name}! Here's a question: Can you explain the relationship between ${doc.topics[0]} and ${doc.topics[1]} as discussed in this document?`;
+        addMessageToChat('assistant', quizText);
+        speakAndShow(quizText);
+        addExperience(20);
+      }
+    };
+
+    window.removeDocument = function(docId) {
+      uploadedDocuments = uploadedDocuments.filter(d => d.id != docId);
+      updateDocumentList();
+      updateDocumentStats();
+      updateStatus('🗑️ Document removed');
+    };
+
+    // Game functions
+    window.startMatchingGame = function() {
+      speakAndShow("Let's play a concept matching game! I'll give you a term, and you tell me which document it relates to most closely.");
+      if (isInitialized) {
+        head.setMood('energetic');
+        setTimeout(() => head.playGesture('handup', 3), 1000);
+      }
+      addExperience(40);
+    };
+
+    window.startWordAssociation = function() {
+      speakAndShow("Time for word association! I'll say a word from your documents, and you say the first related concept that comes to mind. Ready?");
+      if (isInitialized) {
+        head.setMood('friendly');
+      }
+      addExperience(35);
+    };
+
+    window.startTimeChallenge = function() {
+      speakAndShow("Speed quiz time! I'll ask quick questions about your documents. Answer as fast as you can to earn bonus points!");
+      if (isInitialized) {
+        head.setMood('energetic');
+        setTimeout(() => head.playGesture('😎', 2), 1000);
+      }
+      addExperience(45);
+    };
+
+    // Initialize progress display
+    updateProgressDisplay();
+  </script>
+</body>
+</html>
