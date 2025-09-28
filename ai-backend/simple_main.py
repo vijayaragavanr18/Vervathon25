@@ -180,12 +180,12 @@ async def get_models_info():
 if __name__ == "__main__":
     print("🚀 Starting GENAVATOR1 AI Backend (Basic Mode)...")
     print("📡 FastAPI Server")
-    print("🌐 Server will run on http://localhost:8000")
+    print("🌐 Server will run on http://localhost:8001")
     
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8000,
+        port=8001,
         reload=False,
         log_level="info"
     )

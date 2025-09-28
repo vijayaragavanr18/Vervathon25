@@ -593,8 +593,8 @@
         const formData = new FormData();
         formData.append('file', file);
         
-        // Upload to FastAPI backend with PyMuPDF processing
-        const response = await fetch('http://localhost:8001/api/v1/upload', {
+        // Upload to RAG backend (use relative URL for deployment)
+        const response = await fetch('/api/v1/upload', {
           method: 'POST',
           body: formData
         });
@@ -755,8 +755,8 @@
       updateStatus('🧠 AI is analyzing your question with document context...');
       
       try {
-        // Use FastAPI backend for document-aware chat
-        const response = await fetch('http://localhost:8001/api/v1/chat', {
+        // Use RAG backend for document-aware chat (relative URL for deployment)
+        const response = await fetch('/api/v1/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

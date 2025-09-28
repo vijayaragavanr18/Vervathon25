@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TalkingHead Advanced Features Demo</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      margin: 0;
+      padding: 20px;
+      color: white;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      gap: 20px;
+    }
+    .main-panel {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .control-panel {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      height: fit-content;
+    }
+    #avatar {
+      width: 100%;
+      height: 500px;
+      border-radius: 15px;
+      background: rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding: 15px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #fff;
+      font-size: 16px;
+    }
+    .btn {
+      padding: 8px 12px;
+      margin: 3px;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s;
+    }
+    .btn-gesture { background: #FF6B6B; color: white; }
+    .btn-pose { background: #4ECDC4; color: white; }
+    .btn-mood { background: #45B7D1; color: white; }
+    .btn-emoji { background: #FFA07A; color: white; }
+    .btn-special { background: #98D8C8; color: #333; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+    #text-input {
+      width: calc(100% - 20px);
+      padding: 10px;
+      border: none;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    #speak-btn {
+      width: 100%;
+      padding: 12px;
+      background: #2ECC71;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+    #speak-btn:hover { background: #27AE60; }
+    #status {
+      padding: 10px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      font-size: 12px;
+      margin-bottom: 15px;
+      min-height: 20px;
+    }
+    .demo-text {
+      background: rgba(0,0,0,0.1);
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .demo-text:hover { background: rgba(0,0,0,0.2); }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js/+esm",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+        "talkinghead": "./modules/talkinghead.mjs"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="main-panel">
+      <h1>🎭 TalkingHead Advanced Features</h1>
+      <div id="avatar"></div>
+      <div id="status">Initializing advanced demo...</div>
+    </div>
+    
+    <div class="control-panel">
+      <div class="control-group">
+        <h3>💬 Speech</h3>
+        <input id="text-input" placeholder="Enter text to speak..." value="Welcome to the advanced TalkingHead demo! I can express emotions, make gestures, and change poses." />
+        <button id="speak-btn">Speak</button>
+        
+        <div class="demo-text" onclick="speakDemo('Hello! I am your 3D avatar assistant. How can I help you today?')">
+          "Hello! I am your 3D avatar..."
+        </div>
+        <div class="demo-text" onclick="speakDemo('I can express different emotions and perform various gestures while speaking.')">
+          "I can express different emotions..."
+        </div>
+        <div class="demo-text" onclick="speakDemo('This technology combines 3D graphics with natural language processing for immersive experiences.')">
+          "This technology combines..."
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>👋 Gestures</h3>
+        <button class="btn btn-gesture" onclick="playGesture('handup')">Wave</button>
+        <button class="btn btn-gesture" onclick="playGesture('thumbup')">Thumbs Up</button>
+        <button class="btn btn-gesture" onclick="playGesture('ok')">OK Sign</button>
+        <button class="btn btn-gesture" onclick="playGesture('thumbdown')">Thumbs Down</button>
+        <button class="btn btn-gesture" onclick="playGesture('namaste')">Namaste</button>
+        <button class="btn btn-gesture" onclick="playGesture('side')">Point</button>
+      </div>
+
+      <div class="control-group">
+        <h3>🧍 Poses</h3>
+        <button class="btn btn-pose" onclick="changePose('side')">Side</button>
+        <button class="btn btn-pose" onclick="changePose('hip')">Hip</button>
+        <button class="btn btn-pose" onclick="changePose('wide')">Wide</button>
+        <button class="btn btn-pose" onclick="changePose('confident')">Confident</button>
+        <button class="btn btn-pose" onclick="changePose('straight')">Straight</button>
+      </div>
+
+      <div class="control-group">
+        <h3>😊 Moods</h3>
+        <button class="btn btn-mood" onclick="changeMood('neutral')">Neutral</button>
+        <button class="btn btn-mood" onclick="changeMood('energetic')">Energetic</button>
+        <button class="btn btn-mood" onclick="changeMood('happy')">Happy</button>
+        <button class="btn btn-mood" onclick="changeMood('sad')">Sad</button>
+      </div>
+
+      <div class="control-group">
+        <h3>😄 Emojis</h3>
+        <button class="btn btn-emoji" onclick="playEmoji('😊')">😊</button>
+        <button class="btn btn-emoji" onclick="playEmoji('😂')">😂</button>
+        <button class="btn btn-emoji" onclick="playEmoji('😮')">😮</button>
+        <button class="btn btn-emoji" onclick="playEmoji('😢')">😢</button>
+        <button class="btn btn-emoji" onclick="playEmoji('😎')">😎</button>
+        <button class="btn btn-emoji" onclick="playEmoji('🤔')">🤔</button>
+        <button class="btn btn-emoji" onclick="playEmoji('😴')">😴</button>
+        <button class="btn btn-emoji" onclick="playEmoji('😱')">😱</button>
+      </div>
+
+      <div class="control-group">
+        <h3>✨ Special Features</h3>
+        <button class="btn btn-special" onclick="randomDemo()">Random Demo</button>
+        <button class="btn btn-special" onclick="expressiveDemo()">Expressive Talk</button>
+        <button class="btn btn-special" onclick="gestureCombo()">Gesture Combo</button>
+        <button class="btn btn-special" onclick="resetAvatar()">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { TalkingHead } from "talkinghead";
+
+    let head;
+    let isInitialized = false;
+
+    function updateStatus(message, isError = false) {
+      const status = document.getElementById('status');
+      status.innerHTML = message;
+      status.style.background = isError ? 'rgba(255,0,0,0.2)' : 'rgba(0,255,0,0.2)';
+      console.log(message);
+    }
+
+    // Initialize TalkingHead
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        updateStatus('🚀 Loading TalkingHead avatar...');
+        
+        const nodeAvatar = document.getElementById('avatar');
+        head = new TalkingHead(nodeAvatar, {
+          lipsyncModules: ["en"],
+          mixerGainSpeech: 3,
+          avatarMood: "neutral",
+          avatarSpeakingHeadMove: 0.8,
+          avatarSpeakingEyeContact: 0.9,
+          modelPixelRatio: window.devicePixelRatio || 1
+        });
+
+        await head.showAvatar({
+          url: './avatars/ladyavatar.glb',
+          body: 'F',
+          avatarMood: 'neutral',
+          ttsLang: "en-GB",
+          ttsVoice: "en-GB-Standard-A",
+          lipsyncLang: 'en'
+        });
+
+        setupCustomFeatures();
+        isInitialized = true;
+        updateStatus('✅ Avatar ready! Try the controls →');
+
+      } catch (error) {
+        updateStatus('❌ Error: ' + error.message, true);
+      }
+    });
+
+    function setupCustomFeatures() {
+      // Add custom confident pose
+      head.poseTemplates["confident"] = {
+        standing: true,
+        props: {
+          'Hips.position': {x:0, y:0.989, z:0.001},
+          'Spine.rotation': {x:-0.05, y:0, z:0},
+          'Spine1.rotation': {x:0, y:0, z:0},
+          'Spine2.rotation': {x:0.08, y:0, z:0},
+          'LeftShoulder.rotation': {x:1.57, y:-0.1, z:-1.57},
+          'LeftArm.rotation': {x:1.2, y:0.3, z:0},
+          'RightShoulder.rotation': {x:1.57, y:0.1, z:1.57},
+          'RightArm.rotation': {x:1.2, y:-0.3, z:0}
+        }
+      };
+
+      // Add custom energetic mood
+      head.animMoods["energetic"] = {
+        baseline: { eyesLookDown: 0.05 },
+        speech: { deltaRate: 0.1, deltaPitch: 0.05, deltaVolume: 0.1 },
+        anims: [
+          { name: 'breathing', delay: 1200, dt: [800,400,800], vs: { chestInhale: [0.7,0.7,0] } },
+          { name: 'pose', alt: [
+            { p: 0.3, delay: [3000,8000], vs: { pose: ['confident'] } },
+            { delay: [3000,8000], vs: { pose: ['side'] } }
+          ]},
+          { name: 'head',
+            idle: { delay: [0,500], dt: [[200,3000]], vs: { headRotateX: [[-0.02,0.12]], headRotateY: [[-0.2,0.2]], headRotateZ: [[-0.06,0.06]] } },
+            talking: { dt: [[0,800,0]], vs: { headRotateX: [[-0.03,0.18,1,2]], headRotateY: [[-0.08,0.08]], headRotateZ: [[-0.08,0.08]] } }
+          },
+          { name: 'eyes', delay: [100,3000], dt: [[100,400],[100,3000,2]], vs: { eyesRotateY: [[-0.5,0.5]], eyesRotateX: [[-0.1,0.5]] } },
+          { name: 'blink', delay: [800,6000,1,2], dt: [40,[80,250],80], vs: { eyeBlinkLeft: [1,1,0], eyeBlinkRight: [1,1,0] } }
+        ]
+      };
+
+      // Happy mood
+      head.animMoods["happy"] = {
+        baseline: { mouthSmile: 0.1, eyeSquintLeft: 0.1, eyeSquintRight: 0.1 },
+        speech: { deltaRate: 0.05, deltaPitch: 0.1, deltaVolume: 0.05 },
+        anims: [
+          { name: 'breathing', delay: 1500, dt: [1000,500,1000], vs: { chestInhale: [0.6,0.6,0] } },
+          { name: 'pose', alt: [{ delay: [4000,12000], vs: { pose: ['side'] } }]},
+          { name: 'head',
+            idle: { delay: [0,800], dt: [[200,4000]], vs: { headRotateX: [[-0.03,0.12]], headRotateY: [[-0.25,0.25]], headRotateZ: [[-0.07,0.07]] } },
+            talking: { dt: [[0,1000,0]], vs: { headRotateX: [[-0.04,0.16,1,2]], headRotateY: [[-0.1,0.1]], headRotateZ: [[-0.1,0.1]] } }
+          },
+          { name: 'eyes', delay: [200,4000], dt: [[100,500],[100,4000,2]], vs: { eyesRotateY: [[-0.4,0.4]], eyesRotateX: [[-0.15,0.4]] } },
+          { name: 'blink', delay: [1200,7000,1,2], dt: [50,[100,280],100], vs: { eyeBlinkLeft: [1,1,0], eyeBlinkRight: [1,1,0] } }
+        ]
+      };
+
+      // Sad mood
+      head.animMoods["sad"] = {
+        baseline: { eyesLookDown: 0.3, mouthFrownLeft: 0.2, mouthFrownRight: 0.2 },
+        speech: { deltaRate: -0.1, deltaPitch: -0.1, deltaVolume: -0.1 },
+        anims: [
+          { name: 'breathing', delay: 2000, dt: [1500,700,1200], vs: { chestInhale: [0.4,0.4,0] } },
+          { name: 'pose', alt: [{ delay: [6000,15000], vs: { pose: ['straight'] } }]},
+          { name: 'head',
+            idle: { delay: [0,1500], dt: [[300,6000]], vs: { headRotateX: [[-0.02,0.05]], headRotateY: [[-0.15,0.15]], headRotateZ: [[-0.05,0.05]] } },
+            talking: { dt: [[0,1200,0]], vs: { headRotateX: [[-0.02,0.08,1,2]], headRotateY: [[-0.08,0.08]], headRotateZ: [[-0.08,0.08]] } }
+          },
+          { name: 'eyes', delay: [500,6000], dt: [[200,700],[200,6000,2]], vs: { eyesRotateY: [[-0.3,0.3]], eyesRotateX: [[-0.1,0.2]] } },
+          { name: 'blink', delay: [1500,10000,1,2], dt: [70,[150,400],150], vs: { eyeBlinkLeft: [1,1,0], eyeBlinkRight: [1,1,0] } }
+        ]
+      };
+    }
+
+    // Global functions for buttons
+    window.speakDemo = function(text) {
+      if (!isInitialized) return;
+      document.getElementById('text-input').value = text;
+      head.speakText(text);
+      updateStatus('🗣️ Speaking: "' + text.substring(0, 30) + '..."');
+    };
+
+    window.playGesture = function(gesture) {
+      if (!isInitialized) return;
+      head.playGesture(gesture, 3);
+      updateStatus('👋 Playing gesture: ' + gesture);
+    };
+
+    window.changePose = function(pose) {
+      if (!isInitialized) return;
+      head.playPose(pose);
+      updateStatus('🧍 Changed to pose: ' + pose);
+    };
+
+    window.changeMood = function(mood) {
+      if (!isInitialized) return;
+      head.setMood(mood);
+      updateStatus('😊 Mood set to: ' + mood);
+    };
+
+    window.playEmoji = function(emoji) {
+      if (!isInitialized) return;
+      head.playGesture(emoji, 2);
+      updateStatus('😄 Playing emoji: ' + emoji);
+    };
+
+    window.randomDemo = function() {
+      if (!isInitialized) return;
+      const gestures = ['handup', 'thumbup', 'ok', 'side'];
+      const poses = ['side', 'hip', 'confident'];
+      const moods = ['neutral', 'happy', 'energetic'];
+      
+      const randomGesture = gestures[Math.floor(Math.random() * gestures.length)];
+      const randomPose = poses[Math.floor(Math.random() * poses.length)];
+      const randomMood = moods[Math.floor(Math.random() * moods.length)];
+      
+      head.setMood(randomMood);
+      setTimeout(() => head.playPose(randomPose), 500);
+      setTimeout(() => head.playGesture(randomGesture, 3), 1000);
+      
+      updateStatus('🎲 Random demo: ' + randomMood + ' + ' + randomPose + ' + ' + randomGesture);
+    };
+
+    window.expressiveDemo = function() {
+      if (!isInitialized) return;
+      const text = "I'm so excited to demonstrate my expressive capabilities! Watch as I change my mood and gestures!";
+      head.setMood('energetic');
+      setTimeout(() => head.speakText(text), 500);
+      setTimeout(() => head.playGesture('handup', 2), 2000);
+      setTimeout(() => head.playGesture('😊', 2), 4000);
+      updateStatus('✨ Running expressive demo...');
+    };
+
+    window.gestureCombo = function() {
+      if (!isInitialized) return;
+      head.playGesture('handup', 2);
+      setTimeout(() => head.playGesture('thumbup', 2), 2500);
+      setTimeout(() => head.playGesture('ok', 2), 5000);
+      updateStatus('🎭 Playing gesture combination...');
+    };
+
+    window.resetAvatar = function() {
+      if (!isInitialized) return;
+      head.setMood('neutral');
+      head.playPose('side');
+      updateStatus('🔄 Avatar reset to default state');
+    };
+
+    // Speak button handler
+    document.getElementById('speak-btn').addEventListener('click', () => {
+      if (!isInitialized) return;
+      const text = document.getElementById('text-input').value;
+      if (text) {
+        head.speakText(text);
+        updateStatus('🗣️ Speaking: "' + text.substring(0, 30) + '..."');
+      }
+    });
+
+    // Enter key handler for text input
+    document.getElementById('text-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('speak-btn').click();
+      }
+    });
+  </script>
+</body>
+</html>

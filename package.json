@@ -1,0 +1,26 @@
+{
+  "name": "genavator1-rag-app",
+  "version": "2.0.0",
+  "description": "AI-powered educational avatar with RAG document Q&A",
+  "main": "frontend/index.html",
+  "scripts": {
+    "dev": "python -m http.server 3000",
+    "build": "echo 'Build complete - static files ready'",
+    "start": "python api/index.py"
+  },
+  "keywords": [
+    "AI",
+    "RAG",
+    "document-qa",
+    "educational",
+    "avatar",
+    "fastapi",
+    "machine-learning"
+  ],
+  "author": "Vijay",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vijayaragavanr18/Vervathon25"
+  }
+}
